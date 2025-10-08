@@ -1,37 +1,38 @@
-import '@testing-library/jest-native/extend-expect';
+// Setup básico para testes React Native
+import 'react-native-gesture-handler/jestSetup';
 
-// Mock para React Native Vector Icons
-jest.mock('react-native-vector-icons/Ionicons', () => 'Icon');
-
-// Mock para Zustand
-jest.mock('zustand', () => ({
-  create: jest.fn(() => () => ({})),
-}));
-
-// Mock para AsyncStorage
+// Mock do AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => ({
-  setItem: jest.fn(),
-  getItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+  setItem: jest.fn(() => Promise.resolve()),
+  getItem: jest.fn(() => Promise.resolve(null)),
+  removeItem: jest.fn(() => Promise.resolve()),
+  clear: jest.fn(() => Promise.resolve()),
 }));
 
-// Mock para React Navigation
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({
-    navigate: jest.fn(),
-    goBack: jest.fn(),
-  }),
-  useFocusEffect: jest.fn(),
-}));
+// Mock básico do React Native
+jest.mock('react-native', () => {
+  const RN = jest.requireActual('react-native');
+  return {
+    ...RN,
+    Alert: {
+      alert: jest.fn(),
+    },
+    // Mockando apenas componentes necessários
+    NativeModules: {
+      ...RN.NativeModules,
+    },
+  };
+});
 
-// Mock para Notifee
-jest.mock('@notifee/react-native', () => ({
-  displayNotification: jest.fn(),
-  requestPermission: jest.fn(),
-  createChannel: jest.fn(),
-}));
-
-// Silenciar warnings desnecessários nos testes
-console.warn = jest.fn();
-console.error = jest.fn();
+// Suprime warnings durante os testes
+const originalWarn = console.warn;
+console.warn = (...args) => {
+  if (
+    typeof args[0] === 'string' &&
+    (args[0].includes('deprecated') || 
+     args[0].includes('extracted from react-native core'))
+  ) {
+    return;
+  }
+  originalWarn(...args);
+};

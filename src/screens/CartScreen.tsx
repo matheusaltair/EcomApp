@@ -22,15 +22,21 @@ type RootStackParamList = {
   Home: undefined;
 };
 
-const CartScreen = () => {
+
+const CartScreen: React.FC = () => {
   const { items, removeFromCart, updateQuantity, getTotalPrice } = useCartStore();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  console.log('Cart Items:', items);
+  // Remove item do carrinho com feedback visual
   const handleRemoveItem = (productId: string) => {
-    removeFromCart(productId);
+    try {
+      removeFromCart(productId);
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível remover o item.');
+    }
   };
 
+  // Atualiza quantidade ou remove item se quantidade for zero
   const handleQuantityChange = (productId: string, newQuantity: number) => {
     if (newQuantity === 0) {
       Alert.alert(
@@ -43,45 +49,46 @@ const CartScreen = () => {
         { cancelable: true }
       );
     } else {
-      updateQuantity(productId, newQuantity);
+      try {
+        updateQuantity(productId, newQuantity);
+      } catch (error) {
+        Alert.alert('Erro', 'Não foi possível atualizar a quantidade.');
+      }
     }
   };
 
-  // Função para notificação local ao finalizar compra
+  // Finaliza compra com notificação e feedback visual
   const handleCheckout = async () => {
-    // Cria o canal de notificação (apenas na primeira vez)
-    const channelId = await notifee.createChannel({
-      id: 'default',
-      name: 'Default Channel',
-      importance: AndroidImportance.HIGH,
-    });
-
-    // Exibe a notificação
-    await notifee.displayNotification({
-      title: 'Compra finalizada',
-      body: 'Compra finalizada com sucesso',
-      android: {
-        channelId,
+    try {
+      const channelId = await notifee.createChannel({
+        id: 'default',
+        name: 'Notificações',
         importance: AndroidImportance.HIGH,
-        pressAction: {
-          id: 'default',
+      });
+
+      await notifee.displayNotification({
+        title: 'Compra finalizada',
+        body: 'Sua compra foi realizada com sucesso!',
+        android: {
+          channelId,
+          importance: AndroidImportance.HIGH,
+          pressAction: { id: 'default' },
+          sound: 'default',
+          vibrationPattern: [300, 500],
         },
-        // Opcional: para garantir heads-up, pode adicionar sound e vibration
-        sound: 'default',
-        vibrationPattern: [300, 500],
-      },
-    });
+      });
 
-    // Limpa o carrinho
-    items.forEach((item) => removeFromCart(item.product.id));
-
-    // Retorna para a Home
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Home' }],
-    });
+      items.forEach((item) => removeFromCart(item.product.id));
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      });
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível finalizar a compra.');
+    }
   };
 
+  // Renderiza cada item do carrinho
   const renderItem = ({ item }: { item: CartItem }) => (
     <CartItem
       title={item.product.title}
@@ -103,8 +110,9 @@ const CartScreen = () => {
             renderItem={renderItem}
             keyExtractor={(item) => item.product.id}
             contentContainerStyle={styles.cartList}
+            showsVerticalScrollIndicator={false}
+            ListFooterComponent={<CartFooter total={getTotalPrice()} onCheckout={handleCheckout} />}
           />
-          <CartFooter total={getTotalPrice()} onCheckout={handleCheckout} />
         </>
       ) : (
         <EmptyCart />
@@ -113,14 +121,19 @@ const CartScreen = () => {
   );
 };
 
+
 const styles = StyleSheet.create({
   header: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 18,
+    color: '#222',
+    textAlign: 'center',
+    letterSpacing: 0.5,
   },
   cartList: {
     flexGrow: 1,
+    paddingBottom: 16,
   },
 });
 
