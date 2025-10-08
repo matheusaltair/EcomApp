@@ -38,7 +38,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
       } else {
         set({
-          error: 'Usuário ou senha incorretos. Tente novamente.',
+          error: 'Usuário ou senha incorretos.',
           isLoading: false,
         });
       }
