@@ -10,7 +10,7 @@ module.exports = {
     '/ios/',
   ],
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|react-native-vector-icons|@react-navigation)/)',
+    'node_modules/(?!(react-native|@react-native|react-native-vector-icons|@react-navigation|react-native-safe-area-context)/)',
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   collectCoverageFrom: [
@@ -26,4 +26,5 @@ module.exports = {
       statements: 70,
     },
   },
+  testEnvironment: 'node',
 };
